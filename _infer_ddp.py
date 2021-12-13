@@ -23,6 +23,11 @@ def read_img(path):
     img = img/127.5-1
     return torch.tensor([img], dtype=torch.float)
 
+inp = cv2.imread(inp_path)
+inp = cv2.resize(inp, (128,128))
+plt.imshow(inp[:,:,[2,1,0]])
+plt.show()
+
 inp = read_img(inp_path)
 with torch.no_grad(): pred = model(inp)
 
@@ -30,9 +35,4 @@ img = pred[0].detach().numpy().transpose((1,2,0))
 img = 127.5*(img+1)
 img = img.astype(np.uint8)
 plt.imshow(img[:,:,[2,1,0]])
-plt.show()
-
-inp = cv2.imread(inp_path)
-inp = cv2.resize(inp, (128,128))
-plt.imshow(inp[:,:,[2,1,0]])
 plt.show()
