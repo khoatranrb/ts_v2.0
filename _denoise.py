@@ -50,3 +50,118 @@ trainloader = DataLoader(trainset, shuffle=True, batch_size=bs)
 
 valset = Data('data', train=not True)
 valloader = DataLoader(valset, batch_size=bs)
+
+#model
+import torch.nn as nn
+
+class DPED(nn.Module):
+    def __init__(self, out_channels=64):
+        super(DPED, self).__init__()
+        self.conv1 = nn.Conv2d(3, out_channels, 9, padding=4)
+        
+        self.block1 = ConvBlock(64, 64, 3)
+        self.block2 = ConvBlock(64, 64, 3)
+        self.block3 = ConvBlock(64, 64, 3)
+        self.block4 = ConvBlock(64, 64, 3)
+        
+        self.conv2 = nn.Conv2d(64, 64, 3, padding=1)
+        self.conv3 = nn.Conv2d(64, 64, 3, padding=1)
+        self.conv4 = nn.Conv2d(64, 3, 9, padding=4)
+        self.activation = nn.Tanh()
+        
+        self.relu1 = nn.ReLU()
+        self.relu2 = nn.ReLU()
+        self.relu3 = nn.ReLU()
+        
+    def forward(self, x):
+        out = self.conv1(x)
+        out = self.relu1(out)
+        
+        out = self.block1(out)
+        out = self.block2(out)
+        out = self.block3(out)
+        out = self.block4(out)
+        
+        out = self.conv2(out)
+        out = self.relu2(out)
+        
+        out = self.conv3(out)
+        out = self.relu3(out)
+
+        out = self.conv4(out)
+        out = self.activation(out)
+        
+        return out
+
+class ConvBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, conv_size):
+        super(ConvBlock, self).__init__()
+        self.conv_size = conv_size
+        
+        self.conv1 = nn.Conv2d(in_channels, out_channels, conv_size, 1, padding=1)
+        self.conv2 = nn.Conv2d(in_channels, out_channels, conv_size, 1, padding=1)
+        
+        self.relu = nn.ReLU()
+        
+    def forward(self, x):
+        out = self.conv1(x)
+        out = self.relu(out)
+        
+        out = self.conv2(out)
+        out = self.relu(out)
+        
+        out = out + x
+        return out
+
+model = DPED().cuda()
+
+from torch.optim import SGD, Adam, RMSprop
+
+opt = RMSprop(model.parameters(), lr=1e-4)
+
+loss_func = nn.MSELoss(reduction='sum')
+
+from tqdm.auto import tqdm
+epochs = 50
+
+for epoch in range(epochs):
+    torch.cuda.empty_cache()
+    train_iter = iter(trainloader)
+    model.train()
+    total_loss = 0
+    count = 0
+    print('Epoch', epoch)
+    for _ in tqdm(range(len(trainloader))):
+        opt.zero_grad()
+        try:
+            inp, out = next(train_iter)
+        except Exception as e:
+            continue
+        inp = inp.cuda()
+        out = out.cuda()
+
+        pred = model(inp)
+        loss = loss_func(pred, out)
+        loss.backward()
+        opt.step()
+        total_loss += loss.item()
+        count += 1
+    print(total_loss/(count*bs))
+    torch.save(model, 'saved/RMSprop/%s.pth'%(epoch))
+    model.eval()
+    val_iter = iter(valloader)
+    total_loss = 0
+    count = 0
+    for _ in tqdm(range(len(valloader))):
+        try:
+            inp, out = next(val_iter)
+        except:
+            continue
+        inp = inp.cuda()
+        out = out.cuda()
+
+        with torch.no_grad(): pred = model(inp)
+        loss = loss_func(pred, out)
+        total_loss += loss.item()
+        count += 1
+    print(total_loss/(count*bs))
