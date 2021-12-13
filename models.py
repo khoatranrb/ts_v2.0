@@ -6,7 +6,7 @@ import torch.nn as nn
 
 class MNIST(nn.Module):
     def __init__(self):
-        super(Net, self).__init__()
+        super(MNIST, self).__init__()
         self.conv1 = nn.Conv2d(1, 32, 3, 1, 1)
         self.conv2 = nn.Conv2d(32, 32, 3, 1, 1)
         self.conv3 = nn.Conv2d(32, 32, 3, 1, 1)
@@ -29,7 +29,7 @@ class MNIST(nn.Module):
      
 class MNIST_DDP(nn.Module):
     def __init__(self):
-        super(Net, self).__init__()
+        super(MNIST_DDP, self).__init__()
         self.conv1 = Step(nn.Conv2d(1, 32, 3, 1, 1))
         self.conv2 = Step(nn.Conv2d(32, 32, 3, 1, 1))
         self.conv3 = Step(nn.Conv2d(32, 32, 3, 1, 1))
@@ -154,7 +154,7 @@ class DPED_DDP(nn.Module):
 
 class ConvBlock_DDP(nn.Module):
     def __init__(self, in_channels, out_channels, conv_size):
-        super(ConvBlock, self).__init__()
+        super(ConvBlock_DDP, self).__init__()
         self.conv_size = conv_size
         
         self.conv1 = Step(nn.Conv2d(in_channels, out_channels, conv_size, 1, padding=1))
