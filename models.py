@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import torch.nn.functional as F
 from ddp import Step
+import torch.nn as nn
 
 class MNIST(nn.Module):
     def __init__(self):
