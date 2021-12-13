@@ -36,7 +36,7 @@ class Denoise_Data(Dataset):
         return len(os.listdir(os.path.join(self.path, 'inp')))
     
     def __getitem__(self, idx):
-        idx -= 1
+        idx += 1
         if self.train:
             path = os.path.join(self.path, '%s.jpg'%(idx))
             out = cv2.imread(path)
